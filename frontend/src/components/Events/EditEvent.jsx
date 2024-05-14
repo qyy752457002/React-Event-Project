@@ -25,11 +25,11 @@ export default function EditEvent() {
     
     这个数组用于标识查询的类型和查询所需的参数。
 
-    1. 'events' 是查询的类型，表示我们正在获取事件数据。
+      1. 'events' 是查询的类型，表示我们正在获取events数据。
 
-    2. params.id 是事件的特定标识符，用于唯一标识我们要获取的特定事件。
+      2. params.id 是事件的特定标识符，用于唯一标识我们要获取的特定事件。
 
-    3. signal 是 AbortSignal 对象的一部分，在 fetchEvent 函数中，用于控制和处理请求的取消。
+      3. signal 是 AbortSignal 对象的一部分，在 fetchEvent 函数中，用于控制和处理请求的取消。
 
     *** queryKey 数组的第一个元素指定了查询的类型，第二个元素指定了查询所需的参数。***
 
@@ -42,17 +42,55 @@ export default function EditEvent() {
   const { data, isError, error } = useQuery({
     queryKey: ['events', params.id], // 查询键
     queryFn: ({ signal }) => fetchEvent({ signal, id: params.id }), // 查询函数
-    staleTime: 10000
+    staleTime: 10000 // 每隔10秒，'events' 查询键下对应 params.id 数据会被标记为 stale，客户端会向服务器请求 最新的 'events' 查询键下对应 params.id 的 数据
+    // gcTime: 1000 // 数据会在缓存里面保留1秒
   });
 
-  // 提交表单数据的处理函数
+  // // 乐观更新 (Optimistic Update)
+  // const { mutate } = useMutation({ 
+  //   mutationFn: updateEvent,
+  //   // onMutate 代表 发起mutation之前执行一些操作
+  //   onMutate: async (data) => {  // 这里的 data 是 handleSubmit() 函数里传入 mutate() 函数的 {id: params.id, event: formData}
+
+  //       // 从 data 中获取 event，这里的 data 是 {id: params.id, event: formData}
+  //       const newEvent = data.event; 
+  //       // 等待取消 queryClient 中的 'events' 查询键下对应 params.id 的所有正在进行的查询
+  //       await queryClient.cancelQueries({ queryKey: ['events', params.id] });
+
+  //       // 从 queryClient 中获取 当前 'events' 查询键下对应 params.id 的数据
+  //       const previousEvent = queryClient.getQueryData(['events', params.id]);
+  //       // 使用 newEvent 更改 queryClient 中的 'events' 查询键下对应 params.id 的数据
+  //       queryClient.setQueryData(['events', params.id], newEvent); 
+
+  //       return { previousEvent }; // 返回 previousEvent，以便在 mutation 失败时回滚数据
+  //   }, 
+
+  //   // onError 代表 mutation 失败时执行一些操作
+  //   onError: (error, data, context) => {
+  //     // 使用 previousEvent 更改 queryClient 中的 'events' 查询键下对应 params.id 的数据
+  //     queryClient.setQueryData(['events', params.id], context.previousEvent); 
+  //   }, 
+
+  //   // onSettled 代表 mutation 完成后执行的一些操作 (不管成功还是失败)
+  //   onSettled: () => { 
+  //     // 立即标记 'events' 查询键下对应 params.id 的数据为 stale，这会触发客户端向服务器请求最新的 'events' 查询键下对应 params.id 的数据
+  //     queryClient.invalidateQueries(['events', params.id]);
+  //   }
+  // });
+
+  // function handleSubmit(formData) {
+  //   mutate({id: params.id, event: formData}); 
+  //   navigate('../'); // 返回上一页
+  // }
+
+  // 提交表单数据的处理函数，将formData传递给后端服务器
   function handleSubmit(formData) {
     submit(formData, { method: 'PUT' });
   }
 
   // 关闭模态框的处理函数
   function handleClose() {
-    navigate('../');
+    navigate('../'); // 返回上一页
   }
 
   let content;
@@ -91,6 +129,7 @@ export default function EditEvent() {
     );
   }
 
+  // 根据数据加载状态渲染内容
   if (data) {
     content = (
       <EventForm inputData={data} onSubmit={handleSubmit}>
@@ -98,8 +137,8 @@ export default function EditEvent() {
           <p>Sending data...</p>
         ) : (
           <>
-            {/* 显示取消按钮 */}
-            <Link to="../" className="button-text">
+            {/* 显示取消按钮，点击后回到上一页 */}
+            <Link to="../" className="button-text"> 
               Cancel
             </Link>
             {/* 显示更新按钮 */}
@@ -148,6 +187,7 @@ export default function EditEvent() {
 */
 
 // 加载器函数，用于加载事件数据
+// eslint-disable-next-line react-refresh/only-export-components
 export function loader({ params }) {
   // 使用 fetchEvent 函数获取事件数据
   return queryClient.fetchQuery({
@@ -156,11 +196,12 @@ export function loader({ params }) {
   });
 }
 
-// 动作函数，用于处理更新事件操作
+// 动作函数，用于处理更新事件操作，会在表单提交时调用
+// eslint-disable-next-line react-refresh/only-export-components
 export async function action({ request, params }) {
   const formData = await request.formData(); // 获取表单数据
   const updatedEventData = Object.fromEntries(formData); // 将表单数据转换为对象形式
-  await updateEvent({ id: params.id, event: updatedEventData }); // 更新事件数据
-  await queryClient.invalidateQueries(['events']); // 使事件列表查询失效，以便重新获取最新数据
+  await updateEvent({ id: params.id, event: updatedEventData }); // 使用 updatedEventData 更新 对应id 的event
+  await queryClient.invalidateQueries(['events']); // 立即标记 'events' 查询键下的数据为 stale，这会触发客户端向服务器请求最新的 'events' 查询键下的数据
   return redirect('../'); // 重定向到上级路由
 }

@@ -3,8 +3,6 @@ import { QueryClient } from '@tanstack/react-query';
 // 创建一个全局的 QueryClient 实例
 export const queryClient = new QueryClient();
 
-// 获取事件列表的函数
-
 /*
     在 fetchEvents 函数中，signal, searchTerm, 和 max 是作为一个对象的属性传递的，
     而不是单独的参数。这意味着你可以选择性地传递这些属性，
@@ -27,11 +25,13 @@ export const queryClient = new QueryClient();
     可以调用 `AbortController` 的 `abort()` 方法来中止请求，从而避免不必要的网络传输和资源消耗。
 
     总之，`signal` 参数的作用是用来控制异步操作的执行，并在需要时中止该操作，以提高性能并避免不必要的资源消耗。
+
+    *********************************************************************************
+    很重要！！！signal 参数在是可选的，它可以被省略，如果不需要中止操作，则可以不传递该参数。
+    *********************************************************************************
 */
 
-/*
-  http://localhost:3000 由后台服务器的监听端口所决定，这儿设定的是3000
-*/
+// 获取事件列表，http://localhost:3000 由后台服务器的监听端口所决定，这儿设定的是3000
 export async function fetchEvents({ signal, searchTerm, max }) {
   let url = 'http://localhost:3000/events';
 

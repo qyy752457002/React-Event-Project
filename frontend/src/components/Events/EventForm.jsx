@@ -7,12 +7,15 @@ import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 export default function EventForm({ inputData, onSubmit, children }) {
   // 定义状态变量，用于存储选定的图片
+
+  // ?是可选链操作符，它的作用是访问可能为 null 或 undefined 的对象属性，避免因为对象为 null 或 undefined 而导致的 TypeError
+  // 初始化 selectedImage 的状态为 inputData 对象的 image 属性的值，如果 inputData 对象不存在或者其 image 属性不存在，则 selectedImage 的初始值为 undefined
   const [selectedImage, setSelectedImage] = useState(inputData?.image);
 
   // 使用 useQuery hook 获取可选择的图片数据
   const { data, isPending, isError } = useQuery({
     queryKey: ['events-images'], // 查询键
-    queryFn: fetchSelectableImages, // 查询函数
+    queryFn: fetchSelectableImages, // 查询函数 
   });
 
   // 处理选择图片的函数
@@ -21,6 +24,8 @@ export default function EventForm({ inputData, onSubmit, children }) {
   }
 
   // 提交表单的处理函数
+  // event 是事件对象，它代表着表单提交事件的发生。
+  // 这个事件对象中包含了与表单提交相关的信息，例如表单中输入的数据等。
   function handleSubmit(event) {
     event.preventDefault(); // 阻止表单默认提交行为
 

@@ -14,13 +14,14 @@ export default function NewEvent() {
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: createNewEvent, // 转变函数
     onSuccess: () => { // 请求成功后的处理函数
-      queryClient.invalidateQueries({ queryKey: ['events'] }); // 使事件列表查询失效，以便重新获取最新数据
+      queryClient.invalidateQueries({ queryKey: ['events'] }); // 立即标记 'events' 查询键下的数据为 stale，这会触发客户端向服务器请求最新的 'events' 查询键下的数据
       navigate('/events'); // 导航到事件列表页
     },
   });
 
-  // 提交表单数据的处理函数
+  // 提交表单数据 (formData) 处理函数
   function handleSubmit(formData) {
+    // { event: formData } 对应 createNewEvent 函数 里 传进 的 eventData
     mutate({ event: formData }); // 调用 mutate 函数发起异步请求
   }
 

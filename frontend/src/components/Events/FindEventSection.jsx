@@ -21,7 +21,7 @@ export default function FindEventSection() {
     step 3. fetchEvents({ signal, searchTerm: searchTerm })
   */
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({ 
     queryKey: ['events', { searchTerm: searchTerm }], // 查询键，包含搜索关键词
     queryFn: ({ signal, queryKey }) => fetchEvents({ signal, ...queryKey[1] }), // 查询函数
     enabled: searchTerm !== undefined // 是否启用查询，当搜索关键词不为空时启用

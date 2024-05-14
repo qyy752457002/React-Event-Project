@@ -6,7 +6,7 @@ export default function Header({ children }) {
 
   return (
     <>
-      {/* 如果有正在加载的数据，显示进度条 */}
+      {/* 如果有正在加载的数据，显示进度条，这儿是progress元素 */}
       <div id="main-header-loading">{fetching > 0 && <progress />}</div>
       <header id="main-header">
         <div id="header-title">

@@ -22,15 +22,16 @@ export default function EventDetails() {
   // 使用 useMutation hook 处理删除事件
   const {
     mutate,
-    isPending: isPendingDeletion,
-    isError: isErrorDeleting,
-    error: deleteError,
+    isPending: isPendingDeletion, // 是否正在删除事件的状态，isPendingDeletion 
+    isError: isErrorDeleting, // 是否删除事件出错的状态，isErrorDeleting
+    error: deleteError, // 删除事件的错误信息，deleteError
   } = useMutation({
     mutationFn: deleteEvent, // 删除事件的函数
     onSuccess: () => {
-      queryClient.invalidateQueries({ // 使查询无效
-        queryKey: ['events'], // 查询键
-        refetchType: 'none', // 不重新获取数据
+      queryClient.invalidateQueries({ 
+        queryKey: ['events'], // 立即标记 "events" 查询键下的数据为stale
+        refetchType: 'none',  // 客户端不会立即向服务器请求最新的 "events" 查询键下的数据
+                              // ex. http://localhost:3000/events/279 是不行的，因为 id 为 279 的 事件 已经被删除了
       });
       navigate('/events'); // 导航到事件列表页
     },
@@ -48,6 +49,7 @@ export default function EventDetails() {
 
   // 确认删除事件
   function handleDelete() {
+    // { id: params.id } 对应 deleteEvent 函数 里 传进 的 { id }
     mutate({ id: params.id }); // 调用删除事件的函数
   }
 
@@ -124,7 +126,7 @@ export default function EventDetails() {
             Do you really want to delete this event? This action cannot be
             undone.
           </p>
-          <div className="form-actions">
+          <div className="form-actions"> 
             {isPendingDeletion && <p>Deleting, please wait...</p>}
             {!isPendingDeletion && (
               <>
